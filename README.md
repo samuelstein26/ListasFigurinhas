@@ -1,4 +1,5 @@
-Funções:
+Funções a serem aplicadas:
+========
 
 Inserção
 -----------
