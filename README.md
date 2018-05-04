@@ -1,29 +1,27 @@
 Funções a serem aplicadas:
 ========
 
-Inserção
+-> 1 - Inserção
 -----------
 ```
--> Inserção novo componente:
-  - Manual
-  - Importação de documento de texto
--> Inserção de figurinha:
-  - Manual
-  - Pacote de 5
+-> 1 - Novo Integrante
+-> 2 - Figurinhas de um Integrante
+-> 3 - Pacote de figurinhas(5) para um Integrante
+-> 4 - Importacao de documento
 ```
   
-Consultas
+-> 2 - Consultas
 -----------
 ```
--> Dados de um Componente
--> Dados todos os componentes
+-> 1 - Informacoes de um Integrante
+-> 2 - Informacoes de todos os Integrantes
 Obs.: Ambas há a opção de downloads.
 ```
 
-Alteração
+-> 3 - Trocas
 -----------
 ```
--> Troca entre todos
--> Troca Individual
--> Dar figurinha para outro jogador
+-> 1 - Troca entre dois Integrantes
+-> 2 - Troca entre todos os Integrates
+-> 3 - Dar figurinha para outro Integrante
 ```
