@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #pragma pack(push, 1)
 typedef struct lista {
@@ -15,6 +17,21 @@ typedef struct jogador {
 	struct lista *inicioLista;
 	struct jogador *prox;
 } JOGADOR;
+
+//struct para a funcao troca()
+
+typedef struct nodo_carta {
+	short numero;
+	struct nodo_carta *prox;
+} NODO_CARTA;
+
+typedef struct nodo_jogador {
+	short codigo;
+	struct nodo_carta *repetidas;
+	struct nodo_carta faltantes;
+	struct nodo_jogador *prox;
+} NODO_JOGADOR;
+
 #pragma pack(pop)
 
 struct jogador *listaJogador;
@@ -172,6 +189,59 @@ int insereFigurinha(short figurinha, short j) {
 	return 1;
 }
 
+short removeFigurinha(short j, short card) {
+	struct jogador *pnovo = listaJogador;
+	while (pnovo->codigo != j && pnovo != NULL) {
+		pnovo = pnovo->prox;
+	}
+
+	struct lista *aux_Card = pnovo->inicioLista;
+	struct lista *prev_Aux_Card = NULL;
+
+	if (aux_Card != NULL) {
+		while (aux_Card != NULL) {
+			if (aux_Card->codigo == card)
+				break;
+			else {
+				prev_Aux_Card = aux_Card;
+				aux_Card = aux_Card->prox;
+			}
+		}
+	} else
+		return 0;
+
+	//figurinha não existe
+	if (aux_Card == NULL)
+		return 0;
+
+	//Remocao - primeiro da lista
+	if (prev_Aux_Card == NULL && aux_Card->codigo == card) {
+		//printf("Aqui 1\n");
+		if (aux_Card->prox != NULL) {
+			pnovo->inicioLista = aux_Card->prox;
+			free(aux_Card);
+		} else {
+			free(aux_Card);
+			pnovo->inicioLista = NULL;
+		}
+		return 1;
+	}
+
+	//Remocao - ultimo da lista
+	if (aux_Card->prox == NULL) {
+		//printf("aqui 2\n");
+		prev_Aux_Card->prox = NULL;
+		free(aux_Card);
+		return 1;
+	}
+
+	//Remocao - meio da lista
+	//printf("aqui 3\n");
+	prev_Aux_Card->prox = aux_Card->prox;
+	free(aux_Card);
+	return 1;
+}
+
 void mostraIntegrante(short func) {
 	struct jogador *pnovo = listaJogador;
 	short player, controle = 0;
@@ -229,6 +299,7 @@ void mostraIntegrante(short func) {
 
 void inserePacoteFigurinha(short pacote) {
 	short r, i, j, soma = 0;
+	srand((unsigned) time(NULL));
 	printf("Digite o codigo do Integrante: ");
 	scanf("%hd", &j);
 	fflush(stdin);
@@ -272,8 +343,8 @@ void exportar() {
 		printf("\nNao foi possivel exportar pois nao tem integrantes.\n");
 }
 
-//void importar(){ //falta fazer
-//	char local[200], *linha;
+//void importar(){
+//	char local[200], linha[200];
 //	printf("Digite o local do arquivo a ser importado: ");
 //	gets(local);
 //
@@ -284,37 +355,171 @@ void exportar() {
 //		short sequencia=0;
 //		while(!feof(arq)){
 //			fgets(linha, 100, arq);
-//			if (strcmp(linha[1], '_')){
-//				//alguma coisa
+//			printf("%c", linha[3]);
+//			if (linha[0] == '_'){
+//				struct jogador *pnovo = (struct jogador*) malloc(sizeof(JOGADOR));
+//				short n=0;
+//				while (linha[sequencia] != '\n'){
+//					n+= atoi(linha[n]) * 10;
+//					sequencia++;
+//				}
+//				pnovo->codigo = n;
+//				printf("Codigo: %d", n);
 //			}
 //		}
 //	}
 //	fclose(arq);
 //}
 
-void darFigurinha() {//tem que fazer uma funcao de retirada passando a figurinha e o integrante.
+int verificaJogadorExiste(short j) {
 	struct jogador *pnovo = listaJogador;
-	short player, card;
-	if (pnovo == NULL) {
-		printf("Jogador nao existe.");
-	} else {
-		printf("Digite o codigo do Integrante de Origem: ");
-		scanf("%hd", &player);
-		fflush(stdin);
-		while (pnovo->codigo != player || pnovo->prox != NULL) {
+	while (pnovo != NULL) {
+		if (pnovo->codigo == j)
+			return 1;
+		else
 			pnovo = pnovo->prox;
-		}
-		if (pnovo->codigo == player) {
-			printf("Digite a figurinha: ");
-			scanf("%hd", &card);
+	}
+	return 0;
+}
+
+void darFigurinha() {
+	short playerOrigem, playerDestino, card, resCard;
+
+	//lendo o integrante
+	printf("Digite o codigo do Integrante de Origem: ");
+	scanf("%hd", &playerOrigem);
+	fflush(stdin);
+	//lendo a figurinha
+	if (verificaJogadorExiste(playerOrigem) == 1) {
+		printf("Digite a figurinha: ");
+		scanf("%hd", &card);
+		fflush(stdin);
+
+		resCard = removeFigurinha(playerOrigem, card);
+
+		switch (resCard) {
+		case 0:
+			printf("Figurinha não existe.\n");
+			break;
+		default: {
+			printf("Digite o codigo do Integrante de Destino: ");
+			scanf("%hd", &playerDestino);
 			fflush(stdin);
-			struct lista auxCard = pnovo->inicioLista;
-			while (auxCard.codigo != card || auxCard->prox != NULL) {
-				auxCard = auxCard->prox;
+
+			if (verificaJogadorExiste(playerDestino) == 1) {
+				//printf("\nPlayer: %hd ResCard: %hd", player, resCard);
+				if (insereFigurinha(card, playerDestino) == 1) {
+					printf("Dada figurinha com sucesso.\n");
+				} else {
+					printf("Troca não realizada.\n");
+				}
+			} else {
+				printf("Jogador de destino nao existe.\n");
+				insereFigurinha(card, playerOrigem);
 			}
-			//
-		} else {
-			printf("Jogador nao existe.");
+		}
+		}
+	} else {
+		printf("Jogador de origem nao existe.\n");
+	}
+}
+
+void trocadois() {
+	short playerOrigem, playerDestino, cardOrigem, cardDest, resCard;
+
+	//lendo o integrante Origem
+	printf("Digite o codigo do Integrante 1: ");
+	scanf("%hd", &playerOrigem);
+	fflush(stdin);
+
+	if (verificaJogadorExiste(playerOrigem) == 1) {
+		printf("Digite a figurinha: ");
+		scanf("%hd", &cardOrigem);
+		fflush(stdin);
+
+		resCard = removeFigurinha(playerOrigem, cardOrigem);
+
+		switch (resCard) {
+		case 0:
+			printf("Figurinha não existe.\n");
+			break;
+		default: {
+			printf("Digite o codigo do Integrante 2: ");
+			scanf("%hd", &playerDestino);
+			fflush(stdin);
+
+			if (verificaJogadorExiste(playerDestino) == 1) {
+				printf("Digite a figurinha: ");
+				scanf("%hd", &cardDest);
+				fflush(stdin);
+
+				resCard = removeFigurinha(playerDestino, cardDest);
+
+				switch (resCard) {
+				case 0:
+					printf("Figurinha não existe.\n");
+					insereFigurinha(cardDest, playerDestino);
+					break;
+				default: {
+					insereFigurinha(cardDest, playerOrigem);
+					insereFigurinha(cardOrigem, playerDestino);
+					printf("Troca realizada.\n");
+				}
+				}
+			} else {
+				insereFigurinha(cardOrigem, playerOrigem);
+			}
+		}
+		}
+	} else {
+		printf("Jogador de origem nao existe.\n");
+	}
+}
+
+void troca() {
+	struct jogador *pnovo = listaJogador;
+	if (pnovo == NULL)
+		printf("Nao ha jogadores.\n");
+	else {
+		short i;
+		while (pnovo != NULL) {
+			struct nodo_jogador *nj = (struct nodo_jogador*) malloc(sizeof(NODO_JOGADOR));
+			short controlePrimeiroJogar = 0;
+			struct lista *card = listaJogador->inicioLista;
+			nj->codigo = pnovo->codigo;
+			short controlePrimeiraRepetida = 0, controlePrimeiraFaltante = 0;
+			for (i = 1; i <= 100; i++) {
+				if (card->codigo == i) {
+					if (card->repetidas > 0) {
+						while (card->repetidas > 0) {
+							struct nodo_carta *nc = (struct nodo_carta*) malloc(sizeof(NODO_CARTA));
+							nc->numero = i;
+							if (controlePrimeiraRepetida == 0) {
+								nc->prox = NULL;
+							} else {
+								nc->prox = nj->repetidas;
+							}
+							nj->repetidas = nc;
+							card->repetidas--;
+						}
+					}
+				} else {
+					struct nodo_carta *nc = (struct nodo_carta*) malloc(sizeof(NODO_CARTA));
+					nc->numero = i;
+					if (controlePrimeiraFaltante == 0) {
+						nc->prox = NULL;
+					} else {
+						nc->prox = nj->repetidas;
+					}
+					nj->repetidas = nc;
+				}
+			}
+			if (controlePrimeiroJogar == 0){
+				nj->prox = NULL;
+			}else{
+				//falta fazer
+			}
+			pnovo = pnovo->prox;
 		}
 	}
 }
@@ -353,6 +558,12 @@ int main(void) {
 			break;
 		case 23:
 			exportar();
+			break;
+		case 31:
+			trocadois();
+			break;
+		case 32:
+			troca();
 			break;
 		case 33:
 			darFigurinha();
